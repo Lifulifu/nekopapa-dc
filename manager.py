@@ -17,7 +17,7 @@ class CommandManager:
 
     async def handle(self, message: discord.Message):
         commands = self.parse_command(message)
-        command = commands[1]
+        command = commands[1] if len(commands) >= 2 else None
 
         if command == 'help':
             text = '\n'.join([name for name in self.routes.keys() if name != self.DEFAULT_ROUTE])

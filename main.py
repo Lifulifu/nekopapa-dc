@@ -2,7 +2,6 @@ from consts import DISCORD_TOKEN
 import discord
 import routes
 from manager import CommandManager, ThreadManager
-import sqlite3
 
 intents: discord.Intents = discord.Intents.all()
 client = discord.Client(intents=intents)
@@ -23,48 +22,19 @@ async def on_ready():
 
 @client.event
 async def on_message(message: discord.Message):
+    # Is bot talking, avoid infinite trigger
     if message.author == client.user:
         return
 
+    # Is in game thread
     if message.channel.type == discord.ChannelType.public_thread and message.channel.owner == client.user:
         await thread_manager.handle(message)
+    # Trigger only if bot is mentioned
     elif client.user in message.mentions:
         await command_manager.handle(message)
 
 
-def init_db():
-    con = sqlite3.connect('db/main.db')
-    cur = con.cursor()
-
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS GuessingGame (
-            id TEXT PRIMARY KEY,
-            problem TEXT,
-            trail INTEGER DEFAULT 0,
-            status TEXT DEFAULT "PLAYING",
-            winner TEXT,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS GuessingGameHistory (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            game_id TEXT,
-            trail INTEGER,
-            problem TEXT,
-            question TEXT,
-            answer TEXT,
-            explain TEXT,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-
-    con.commit()
-    con.close()
-
-
 if __name__ == '__main__':
-    init_db()
+    routes.game.init_db()
 
     client.run(DISCORD_TOKEN)

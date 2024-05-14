@@ -47,13 +47,47 @@ answerer_messages = [
     }
 ]
 
+def init_db():
+    con = sqlite3.connect('db/main.db')
+    cur = con.cursor()
+
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS GuessingGame (
+            id TEXT PRIMARY KEY,
+            problem TEXT,
+            trail INTEGER DEFAULT 0,
+            status TEXT DEFAULT "PLAYING",
+            winner TEXT,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS GuessingGameHistory (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            game_id TEXT,
+            trail INTEGER,
+            problem TEXT,
+            question TEXT,
+            answer TEXT,
+            explain TEXT,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    con.commit()
+    con.close()
+
+
 def get_problem():
     with open('./problems.txt', 'r') as f:
         problems = f.readlines()
     return random.choice(problems).strip()
 
+
 def get_problem_info(problem: str):
     return f'題目有 {len(problem)} 個字，第一個注音符號是 {pypinyin.pinyin(problem, style=pypinyin.BOPOMOFO)[0][0][0]}'
+
 
 def ask(problem: str, message: str):
     res = chat([
