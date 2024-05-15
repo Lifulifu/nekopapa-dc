@@ -11,10 +11,6 @@ def replace_user_ids(message: discord.Message):
     return text
 
 
-def process_response(res: str):
-    return res.replace(f'nekopapa:', '').strip()
-
-
 def construct_user_message(message: discord.Message, max_images: int = 1):
     content = []
     content.append({
@@ -39,35 +35,30 @@ def construct_user_message(message: discord.Message, max_images: int = 1):
         'content': content
     }
 
-    return result, used_images
+    return result
 
 
 async def handle(client: discord.Client, message: discord.Message, command: typing.List[str]=[]):
-    raw_messages = []
-    async for msg in message.channel.history(limit=INCLUDE_HISTORY):
-        # Insert reply message
-        raw_messages.append(msg)
-        if msg.reference is not None:
-            replied_message = await msg.channel.fetch_message(msg.reference.message_id)
-            raw_messages.append(replied_message)
-
-    # Construct input message history for response
     history = []
-    total_used_images = 0
-    for msg in raw_messages:
+    is_newest_message = True
+    async for msg in message.channel.history(limit=INCLUDE_HISTORY):
         if msg.author == client.user: # Is bot
             history.append({
                 'role': 'assistant',
                 'content': replace_user_ids(msg)
             })
         else:
-            # INCLUDE_IMAGES will limit the amount of image in history, newest first
-            user_message, used_images = construct_user_message(
-                msg,
-                max_images=INCLUDE_IMAGES - total_used_images
-            )
-            total_used_images += used_images
+            # Only include images in the most recent message
+            max_images = 0 if is_newest_message else INCLUDE_IMAGES
+            user_message = construct_user_message(msg, max_images=max_images)
             history.append(user_message)
+
+            if msg.reference is not None:
+                replied_message = await msg.channel.fetch_message(msg.reference.message_id)
+                replied_message = construct_user_message(msg, max_images=max_images)
+                history.append(replied_message)
+
+        is_newest_message = False
 
     history.reverse()
 
