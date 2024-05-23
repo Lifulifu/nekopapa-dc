@@ -23,9 +23,11 @@ class CommandManager:
             text = '\n'.join([name for name in self.routes.keys() if name != self.DEFAULT_ROUTE])
             await message.channel.send(f'```Available commands: \n\n{text}```')
         elif command in self.routes:
-            await self.routes[command](self.client, message, command)
+            if callable(self.routes[command]):
+                await self.routes[command](self.client, message, command)
         else:
-            await self.routes[self.DEFAULT_ROUTE](self.client, message, command)
+            if callable(self.routes[self.DEFAULT_ROUTE]):
+                await self.routes[self.DEFAULT_ROUTE](self.client, message, command)
 
 
 class ThreadManager:

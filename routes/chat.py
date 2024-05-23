@@ -42,6 +42,9 @@ async def handle(client: discord.Client, message: discord.Message, command: typi
     history = []
     is_newest_message = True
     async for msg in message.channel.history(limit=INCLUDE_HISTORY):
+        if msg.content == '@nekopapa clear': # Don't further append history
+            break
+
         if msg.author == client.user: # Is bot
             history.append({
                 'role': 'assistant',
