@@ -2,6 +2,11 @@ import discord
 import typing
 from qdrant_client import QdrantClient
 from openai_api import embed
+import re
+
+
+def remove_mentions(text: str):
+    return re.sub(r'<@\d+>', '', text).strip()
 
 
 async def handle(client: discord.Client, message: discord.Message, command: typing.List[str]=[]):
@@ -15,17 +20,21 @@ async def handle(client: discord.Client, message: discord.Message, command: typi
         return
 
     db = QdrantClient(url="http://localhost:6333")
-    query_vector = embed(message_to_react.content)
+    query_string = remove_mentions(message_to_react.content)
+    query_vector = embed(query_string)
     search_result = db.search(
         collection_name="images",
         query_vector=query_vector,
         limit=1,
     )
     result = search_result[0].payload
+
     with open(result['filename'], 'rb') as f:
         print('reaction image:', result['filename'])
         file = discord.File(f)
-        await message.channel.send(file=file)
+        await message.channel.send(
+            file=file,
+            content=f'score: {search_result[0].score}')
 
 
 
