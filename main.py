@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 import routes
 from manager import CommandManager, ThreadManager
+import routes.image_reaction
 
 intents: discord.Intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='/', intents=intents)
@@ -11,6 +12,7 @@ command_manager = CommandManager(bot)
 command_manager.register('ping', routes.ping.handle)
 command_manager.register('game', routes.game.handle_start)
 command_manager.register('leaderboard', routes.game.handle_leaderboard)
+command_manager.register('react', routes.image_reaction.handle)
 command_manager.register('clear', None)
 command_manager.register(CommandManager.DEFAULT_ROUTE, routes.chat.handle)
 

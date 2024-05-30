@@ -75,3 +75,11 @@ def chat(messages: List[dict]):
         return chat_with_tools(messages, res_message)
     else:
         return [res_message.content]
+
+
+def embed(message: str):
+    return openai.embeddings.create(
+        model="text-embedding-3-small",
+        input=message,
+        encoding_format='float'
+    ).data[0].embedding
