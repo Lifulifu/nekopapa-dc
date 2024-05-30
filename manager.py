@@ -31,6 +31,8 @@ class CommandManager:
 
 
 class ThreadManager:
+    DEFALUT_ROUTE = '*'
+
     def __init__(self, client: discord.Client):
         self.client = client
         self.routes = {}
@@ -49,4 +51,7 @@ class ThreadManager:
 
     async def handle(self, message: discord.Message):
         channel = self.parse_channel(message)
-        await self.routes[channel](self.client, message)
+        if channel in self.routes and callable(self.routes[channel]):
+            await self.routes[channel](self.client, message)
+        elif callable(self.routes[self.DEFALUT_ROUTE]):
+            await self.routes[self.DEFALUT_ROUTE](self.client, message, [])

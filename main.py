@@ -16,6 +16,7 @@ command_manager.register(CommandManager.DEFAULT_ROUTE, routes.chat.handle)
 
 thread_manager = ThreadManager(bot)
 thread_manager.register('Game', routes.game.handle_play)
+thread_manager.register(ThreadManager.DEFALUT_ROUTE, routes.chat.handle)
 
 @bot.event
 async def on_ready():

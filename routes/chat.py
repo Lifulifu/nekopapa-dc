@@ -2,6 +2,7 @@ from consts import SYSTEM_PROMPT, EXAMPLES, INCLUDE_HISTORY, INCLUDE_IMAGES
 import discord
 from openai_api import chat
 import typing
+import re
 
 
 def replace_user_ids(message: discord.Message):
@@ -42,7 +43,7 @@ async def handle(client: discord.Client, message: discord.Message, command: typi
     history = []
     is_newest_message = True
     async for msg in message.channel.history(limit=INCLUDE_HISTORY):
-        if msg.content == '@nekopapa clear': # Don't further append history
+        if re.match(f'^<@{client.user.id}>\s*clear$', msg.content): # Don't further append history
             break
 
         if msg.author == client.user: # Is bot
@@ -57,9 +58,12 @@ async def handle(client: discord.Client, message: discord.Message, command: typi
             history.append(user_message)
 
             if msg.reference is not None:
-                replied_message = await msg.channel.fetch_message(msg.reference.message_id)
-                replied_message = construct_user_message(replied_message, max_images=max_images)
-                history.append(replied_message)
+                try:
+                    replied_message = await msg.channel.fetch_message(msg.reference.message_id)
+                    replied_message = construct_user_message(replied_message, max_images=max_images)
+                    history.append(replied_message)
+                except Exception as e:
+                    print('Cannot find reference message', e)
 
         is_newest_message = False
 
@@ -74,7 +78,8 @@ async def handle(client: discord.Client, message: discord.Message, command: typi
 
     try:
         res = chat(input_messages)
-        await message.channel.send(res)
+        for r in res:
+            await message.channel.send(r)
     except Exception as e:
         print(e)
         await message.channel.send('發生錯誤，請聯絡 @lifu')
