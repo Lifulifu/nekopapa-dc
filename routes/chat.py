@@ -1,4 +1,4 @@
-from consts import SYSTEM_PROMPT, EXAMPLES, INCLUDE_HISTORY, INCLUDE_IMAGES
+from consts import CHARACTER_SYSTEM_PROMPT, EXAMPLES, INCLUDE_HISTORY, INCLUDE_IMAGES
 import discord
 from openai_api import chat
 import typing
@@ -70,14 +70,14 @@ async def handle(client: discord.Client, message: discord.Message, command: typi
     history.reverse()
 
     input_messages = [
-        { 'role': 'system', 'content': SYSTEM_PROMPT },
+        { 'role': 'system', 'content': CHARACTER_SYSTEM_PROMPT },
         *EXAMPLES,
         *history,
     ]
     print(input_messages)
 
     try:
-        res = chat(input_messages)
+        res = await chat(message, input_messages)
         for r in res:
             await message.channel.send(r)
     except Exception as e:

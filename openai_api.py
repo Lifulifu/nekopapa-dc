@@ -3,64 +3,65 @@ import openai
 from consts import OPENAI_API_KEY
 from tools import tool_schemas, tools
 import json
+import discord
 
 
 openai.api_key = OPENAI_API_KEY
 
-def chat_with_tools(messages: List[dict], res_message):
-    res_dc_messages = []
+async def chat_with_tools(dc_message: discord.Message, messages: List[dict], res_message):
+    res_dc_message_content = []
     messages.append(res_message)
 
     for tool in res_message.tool_calls:
-        func = tools[tool.function.name]['function']
+        tool_content = tools[tool.function.name]
+        func = tool_content['function']
+        print('Function call:', tool.function.name)
 
         args = None
-        arg_val = None
-        func_response = None
+        func_return = None
         try:
             # Valid JSON response
             args = json.loads(tool.function.arguments)
-            err, func_response = func(**args)
+            func_return = func(dc_message, **args)
         except Exception as e:
             # Not valid JSON, try to interpret as single parameter value
             print('Parse args failed', e)
             print(tool.function.arguments)
 
             try:
-                err, func_response = func(tool.function.arguments)
-                arg_val = tool.function.arguments
+                func_return = func(dc_message, tool.function.arguments)
+                args = tool.function.arguments
             except Exception as e:
                 # Single arg fallback failed, abort function call
                 print('Single arg fallback failed', e)
                 continue
 
-        if err is None:
-            messages.append({
-                "tool_call_id": tool.id,
-                "role": "tool",
-                "name": tool.function.name,
-                "content": func_response,
-            })
+        messages.append({
+            "tool_call_id": tool.id,
+            "role": "tool",
+            "name": tool.function.name,
+            "content": func_return,
+        })
 
-            if tool.function.name == 'run_python':
-                res_dc_messages.append(
-                    f'```python\n{arg_val if arg_val is not None else args.get("script") }\n```'
-                )
-                res_dc_messages.append(
-                    f'output:\n```{func_response}```'
-                )
+        if 'post_process' in tool_content:
+            post_func = tool_content['post_process']
+            try:
+                await post_func(dc_message, args, func_return)
+            except Exception as e:
+                print('post_process func failed', e)
+                continue
 
     refined_res = openai.chat.completions.create(
         model="gpt-4o",
         messages=messages,
         temperature=0.7
     )
-    res_dc_messages.append(refined_res.choices[0].message.content)
+    res_dc_message_content = refined_res.choices[0].message.content
 
-    return res_dc_messages
+    return [res_dc_message_content]
 
 
-def chat(messages: List[dict]):
+async def chat(dc_message: discord.Message, messages: List[dict]):
     res = openai.chat.completions.create(
         model="gpt-4o",
         messages=messages,
@@ -72,7 +73,7 @@ def chat(messages: List[dict]):
     res_tools = res_message.tool_calls
 
     if res_tools:
-        return chat_with_tools(messages, res_message)
+        return await chat_with_tools(dc_message, messages, res_message)
     else:
         return [res_message.content]
 

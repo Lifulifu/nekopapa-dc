@@ -1,6 +1,8 @@
 import docker
 import uuid
 from concurrent.futures import ThreadPoolExecutor
+import discord
+import typing
 
 
 def run_with_timeout(func, timeout, kwargs):
@@ -28,20 +30,27 @@ def run_python_container(image: str, script: str, timeout: float = 10, **args):
     return output_text
 
 
-def run_python(script: str):
-    try:
-        res = run_with_timeout(
-            run_python_container,
-            timeout=10,
-            kwargs={
-                'image': 'python:3.11-alpine',
-                'script': script,
-            },
-        )
-        return None, res
-    except Exception as e:
-        return e, None
+def run(message: discord.Message, script: str):
+    res = run_with_timeout(
+        run_python_container,
+        timeout=10,
+        kwargs={
+            'image': 'python:3.11-alpine',
+            'script': script,
+        },
+    )
+    return res
+
+
+async def post_process(message: discord.Message, args: typing.Union[dict, str], return_val: str):
+    if isinstance(args, dict):
+        script = args.get('script')
+    else:
+        script = args
+
+    await message.channel.send(f'```python\n{script}\n```')
+    await message.channel.send(f'output:\n```{return_val}```')
 
 
 if __name__ == '__main__':
-    print(run_python('print("ass")'))
+    print(run('print("ass")'))

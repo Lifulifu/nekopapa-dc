@@ -1,8 +1,10 @@
 import discord
 import typing
 from qdrant_client import QdrantClient
-from openai_api import embed
+from openai_api import chat, embed
+from consts import MOCK_RESPONSE_SYSTEM_PROMPT
 import re
+import os
 
 
 def remove_mentions(text: str):
@@ -20,21 +22,34 @@ async def handle(client: discord.Client, message: discord.Message, command: typi
         return
 
     db = QdrantClient(url="http://localhost:6333")
-    query_string = remove_mentions(message_to_react.content)
-    query_vector = embed(query_string)
+    message_content = remove_mentions(message_to_react.content)
+    mock_response = chat([
+        {
+            'role': 'system',
+            'content': MOCK_RESPONSE_SYSTEM_PROMPT
+        }, {
+            'role': 'user',
+            'content': message_content
+        }
+    ])[0]
+    print('mock response:', mock_response)
+
+    query_vector = embed(mock_response)
     search_result = db.search(
         collection_name="images",
         query_vector=query_vector,
         limit=1,
     )
     result = search_result[0].payload
+    print('reaction image:', result['filename'])
 
-    with open(result['filename'], 'rb') as f:
-        print('reaction image:', result['filename'])
+    with open(os.path.join('images', result['filename']), 'rb') as f:
         file = discord.File(f)
         await message.channel.send(
             file=file,
-            content=f'score: {search_result[0].score}')
+            content=f'score: {search_result[0].score}',
+            reference=message_to_react
+        )
 
 
 
