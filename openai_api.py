@@ -40,7 +40,9 @@ async def chat_with_tools(dc_message: discord.Message, messages: List[dict], res
             "tool_call_id": tool.id,
             "role": "tool",
             "name": tool.function.name,
-            "content": func_return,
+            "content": '\n---\n'.join([
+                f'{search_res["title"]}\n{search_res["body"]}' for search_res in func_return
+            ]),
         })
 
         if 'post_process' in tool_content:

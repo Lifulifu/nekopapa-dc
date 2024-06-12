@@ -1,5 +1,6 @@
 import py_executor
 import dc_utils
+import web_search
 
 tools = {
   'run_python': {
@@ -9,6 +10,10 @@ tools = {
   'list_user_names': {
       'function': dc_utils.list_user_names,
       'post_process': dc_utils.post_process
+  },
+  'web_search': {
+      'function': web_search.search,
+      'post_process': web_search.post_process
   }
 }
 
@@ -37,6 +42,23 @@ tool_schemas = [
             'description': 'List all users in the chat room.',
             'parameters': {},
             'required': []
+        }
+    },
+    {
+        'type': 'function',
+        'function': {
+            'name': 'web_search',
+            'description': 'Input query string to perform web search with duckduckgo.',
+            'parameters': {
+                'type': 'object',
+                'properties': {
+                    'query': {
+                        'type': 'string',
+                        'description': 'Search query string. You can use operators like `site:` to limit site and `+` `-` to include or exclude keywords.'
+                    }
+                },
+                'required': []
+            }
         }
     }
 ]
