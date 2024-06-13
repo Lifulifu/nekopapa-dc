@@ -3,6 +3,7 @@ import discord
 from openai_api import chat
 import typing
 import re
+from datetime import datetime
 
 
 def replace_user_ids(message: discord.Message):
@@ -70,7 +71,10 @@ async def handle(client: discord.Client, message: discord.Message, command: typi
     history.reverse()
 
     input_messages = [
-        { 'role': 'system', 'content': CHARACTER_SYSTEM_PROMPT },
+        {
+            'role': 'system',
+            'content': CHARACTER_SYSTEM_PROMPT.format(time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        },
         *EXAMPLES,
         *history,
     ]
@@ -81,5 +85,6 @@ async def handle(client: discord.Client, message: discord.Message, command: typi
         for r in res:
             await message.channel.send(r)
     except Exception as e:
-        print(e)
-        await message.channel.send('發生錯誤，請聯絡 @lifu')
+        print('Error handling chat: ', e)
+        admin_id = message.guild.get_member_named('lifu').id
+        await message.channel.send(f'發生錯誤，請聯絡 <@{admin_id}>')

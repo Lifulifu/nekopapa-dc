@@ -36,13 +36,6 @@ async def chat_with_tools(dc_message: discord.Message, messages: List[dict], res
                 print('Single arg fallback failed', e)
                 continue
 
-        messages.append({
-            "tool_call_id": tool.id,
-            "role": "tool",
-            "name": tool.function.name,
-            "content": func_return['text'],
-        })
-
         if 'post_process' in tool_content:
             post_func = tool_content['post_process']
             try:
@@ -50,6 +43,14 @@ async def chat_with_tools(dc_message: discord.Message, messages: List[dict], res
             except Exception as e:
                 print('post_process func failed', e)
                 continue
+
+        messages.append({
+            "tool_call_id": tool.id,
+            "role": "tool",
+            "name": tool.function.name,
+            "content": func_return['text'],
+        })
+
 
     refined_res = openai.chat.completions.create(
         model="gpt-4o",

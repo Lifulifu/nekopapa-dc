@@ -12,7 +12,7 @@ def run_with_timeout(func, timeout, kwargs):
         return result
 
 
-def run_python_container(image: str, script: str, timeout: float = 10, **args):
+def run_python_container(image: str, script: str):
     client = docker.from_env()
     script_id = str(uuid.uuid4())
     output = client.containers.run(

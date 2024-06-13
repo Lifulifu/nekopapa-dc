@@ -11,9 +11,13 @@ tools = {
       'function': dc_utils.list_user_names,
       'post_process': dc_utils.post_process
   },
-  'web_search': {
-      'function': web_search.search,
-      'post_process': web_search.post_process
+  'web_text_search': {
+      'function': web_search.text_search,
+      'post_process': web_search.text_search_post_process
+  },
+  'web_image_search': {
+      'function': web_search.image_search,
+      'post_process': web_search.image_search_post_process
   }
 }
 
@@ -47,8 +51,25 @@ tool_schemas = [
     {
         'type': 'function',
         'function': {
-            'name': 'web_search',
+            'name': 'web_text_search',
             'description': 'Input query string to perform web search with duckduckgo.',
+            'parameters': {
+                'type': 'object',
+                'properties': {
+                    'query': {
+                        'type': 'string',
+                        'description': 'Search query string. You can use operators like `site:` to limit site and `+` `-` to include or exclude keywords.'
+                    }
+                },
+                'required': ['query']
+            }
+        }
+    },
+    {
+        'type': 'function',
+        'function': {
+            'name': 'web_image_search',
+            'description': 'Input query string to perform image search with duckduckgo.',
             'parameters': {
                 'type': 'object',
                 'properties': {
