@@ -28,7 +28,7 @@ tool_schemas = [
                 'properties': {
                     'script': {
                         'type': 'string',
-                        'description': 'The python code to execute. Gets results via stdout. This parameter accepts purely python code as string, do not surround your code with markdown code block notation or any text that is not valid python code.\n## Example:\n\nresult = 69 + 42\nprint(result)'
+                        'description': 'The python code to execute. **What you `print()` out is considered as the result, so you must use `print()` in your code.** Do not surround your code with markdown code block notation or any text that is not valid python code.\n## Example:\n\nresult = 69 + 42\nprint(result)'
                     },
                 },
                 'required': ['script'],
@@ -57,7 +57,7 @@ tool_schemas = [
                         'description': 'Search query string. You can use operators like `site:` to limit site and `+` `-` to include or exclude keywords.'
                     }
                 },
-                'required': []
+                'required': ['query']
             }
         }
     }

@@ -27,7 +27,10 @@ def run_python_container(image: str, script: str, timeout: float = 10, **args):
         remove=True
     )
     output_text = output.decode('utf-8').removesuffix('\n')
-    return output_text
+    return {
+        'text': output_text,
+        'data': output_text
+    }
 
 
 def run(message: discord.Message, script: str):
@@ -42,14 +45,14 @@ def run(message: discord.Message, script: str):
     return res
 
 
-async def post_process(message: discord.Message, args: typing.Union[dict, str], return_val: str):
+async def post_process(message: discord.Message, args: typing.Union[dict, str], return_val):
     if isinstance(args, dict):
         script = args.get('script')
     else:
         script = args
 
     await message.channel.send(f'```python\n{script}\n```')
-    await message.channel.send(f'output:\n```{return_val}```')
+    await message.channel.send(f'output:\n```\n{return_val["text"]}\n```')
 
 
 if __name__ == '__main__':
